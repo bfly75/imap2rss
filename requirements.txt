@@ -2,4 +2,5 @@ beautifulsoup4
 python-dateutil
 lxml
 feedgen
-cherrypy
+Flask
+toml
