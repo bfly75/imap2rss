@@ -1,5 +1,5 @@
 imap2rss
 ========
 
-Make an IMAP folder available through a RSS interface
+Make an IMAP folders available through a RSS interface
 
