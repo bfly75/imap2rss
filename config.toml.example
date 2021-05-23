@@ -1,0 +1,49 @@
+[main]
+# host defines on what address the app will listen, e.g. "localhost" or "0.0.0.0" for all IP
+host = "0.0.0.0"
+port = 80
+# baseurl determines the external url for the app. The RSS feeds are accessible at <baseurl>rss?rss_name=<channel_name>.
+baseurl = "https://my.domain/imap2rss/"
+# redirecting might not be working... 
+#redirecturl = "https://my.domain/imap2rss/mail"
+#redirectdomain = "my.domain"
+debug = false
+
+[imap]
+# Multiple mailproviders can be defined in the [imap.<imap_name>] sections below. Use the <imap_name> in the [rss] section to link to the required provider.
+
+[imap.mailprovider1]
+server = "imap.mailprovider1.com"
+username = "me@mailprovider1.com"
+password = "password"
+lastdays = 90
+
+[imap.mailprovider2]
+server = "imap.mailprovider2.com"
+username = "me@mailprovider2.com"
+password = "password"
+lastdays = 90
+
+[rss]
+maxitems = 10
+# Multiple RSS feeds can be created in the [rss.<channel_name>] sections below.
+
+[rss.news1]
+# imap links to mail provider defined above
+imap = "mailprovider1"
+mailbox = "Folder1"
+title = "Some title"
+description = "Some description"
+language = "nl-NL"
+# href is the URL to the HTML website corresponding to the channel
+href = "http://somewhere.com"
+
+[rss.fin_news]
+# imap links to mail provider defined above
+imap = "mailprovider2"
+mailbox = "Folder2"
+title = "Some title"
+description = "Some description"
+language = "nl-NL"
+# href is the URL to the HTML website corresponding to the channel
+href = "http://somewhere.com"
