@@ -39,35 +39,20 @@ class EmailClient(object):
 
 	def _getBody(self, mail):
 		charset = mail.get_content_charset()
-		#print(f"Charset: {charset}")
-		#print(f"Payload: {mail.get_payload(decode=True)}")
-		#print(f"Content type: {mail.get_content_type()}")
-		#print(f"Multipart: {mail.is_multipart()}")
 		if mail.is_multipart():
-			#print("=== Entering multipart processing")
 			bodies = {}
 			for part in mail.get_payload():
-				#print(f"--- Payload of part of multipart: {part}")
 				body, t = self._getBody(part)
 				bodies[t] = body
-				#print(f"--- Type: {t}")
-				#print(f"--- Body: {body}")
-				#if body != None:
-				#	return body, t
 			if 'text/html' in bodies and bodies['text/html'] != None:
-				#print("Return text/html")
 				return bodies['text/html'], 'text/html'
 			elif 'text/plain' in bodies and bodies['text/plain'] != None:
-				#print("Return text/plain")
 				return bodies['text/plain'], 'text/plain'
 			else:
-				#print("Return None")
 				return None, None
 		elif mail.get_content_type() == 'text/html':
-			#print(f"=== Entering text/html processing")
 			return mail.get_payload(decode=True).decode(charset, 'ignore'), mail.get_content_type()
 		elif mail.get_content_type() == 'text/plain':
-			#print(f"=== Entering text/plain processing")
 			return '<pre>'+mail.get_payload(decode=True).decode(charset, 'ignore')+'</pre>', mail.get_content_type()
 		else:
 			return None, None
@@ -98,44 +83,33 @@ class EmailClient(object):
 	def getImage(self, msgn, cid):
 		self.mailserver.select(self.mailbox)
 		typ, data = self.mailserver.uid('fetch', msgn, '(RFC822)')
-
 		try:
 			mail = email.message_from_string(data[0][1])
 		except:
 			mail = email.message_from_bytes(data[0][1])
-
 		try:
 			attach, typ = self._getAttachment(mail, cid)
 		except TypeError as e:
 			app.logger.error("getImage(): "+str(e))
 			abort(404)
-
 		return attach, typ
 
 	def getEMail(self, msgn):
 		self.mailserver.select(self.mailbox)
-		#print(f"Msgn: {msgn}")
 		typ, data = self.mailserver.uid('fetch', msgn, '(RFC822)')
-		#print(f"Typ: {typ}")
-		#print(f"Data: {data}")
 		try:
 			mail = email.message_from_string(data[0][1])
 		except:
 			mail = email.message_from_bytes(data[0][1])
-
 		from_name = self.decode_email(mail['From'],0)
 		from_email = self.decode_email(mail['From'],1)
 		subject = self.decode_email(mail['subject'])
 		date = mail['Date']
-		#print(f"From: {from_name}, {from_email}, subject: {subject}, at: {date}")
-
 		if from_email is None:
 			from_email = config['imap'][self.imapname].get("default-from","no-reply@my.domain")
-
 		body, ctype = self._getBody(mail)
 		if ctype == "text/html":
 			body = self.cid_2_images(body, msgn)
-
 		return {"subject": subject, "From": {'name': from_name, 'email': from_email}, "date": date, "body": body}
 
 @app.route("/attach")
@@ -179,46 +153,6 @@ def EmailReader():
 			item.extract()
 	html = soup
 	head = soup.html.head
-
-	#subject = mail.get('subject','No subject...')
-	#if 'body' in mail:
-	#	soup = BeautifulSoup(mail['body'], features="lxml")
-	#else:
-	#	soup = BeautifulSoup(f'<html><body><h1>{subject}</h1></body></html>', features="lxml")
-	#subject = NavigableString(subject)
-	#title = Tag(soup, "title")
-	#title.insert(0, subject)
-	#
-	#if soup.find('head') == None:
-	#	head = Tag(soup, "head")
-	#	html = Tag(soup, "html")
-	#	html.insert(0, head)
-	#	body = Tag(soup, "body")
-	#	body.insert(0, soup)
-	#	html.insert(0, body)
-	#else:
-	#	head = soup.html.head
-	#	html = soup
-
-	# Redirecting
-	# We might want to lookup the content through a different URL
-	if 'redirecturl' in config['main'] and 'redirectdomain' in config['main']:
-		app.logger.info("Adding Redirects")
-		meta = Tag(soup, "meta")
-		meta['http-equiv'] = "refresh"
-		meta['content'] = "0;url="+config['main']['redirecturl']+"?"+uid
-		link = Tag(soup, "link")
-		link['rel'] = "canonical"
-		link['href'] = config['main']['redirecturl']+"?"+uid
-		js = Tag(soup, "script")
-		js['type'] = "text/javascript"
-		script = NavigableString("if(document.domain != '"+config['main']['redirectdomain']+"') window.location.href ='" + config['main']['redirecturl']+"?"+uid+"'")
-		js.insert(0, script)
-
-		head.insert(0, title)
-		head.insert(0, link)
-		head.insert(0, js)
-
 	response = make_response(html.renderContents().decode('utf-8'))
 	response.headers["Access-Control-Allow-Origin"] = "*"
 	return response
